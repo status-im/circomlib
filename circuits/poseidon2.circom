@@ -2,6 +2,7 @@ pragma circom 2.0.0;
 
 include "./poseidon_constants.circom";
 
+// in^5 (S-box)
 template Sigma() {
     signal input in;
     signal output out;
@@ -24,6 +25,7 @@ template Ark(t, C, r) {
     }
 }
 
+// matmul
 template Mix(t, M) {
     signal input in[t];
     signal output out[t];
@@ -49,6 +51,7 @@ template MixLast(t, M, s) {
     out <== lc;
 }
 
+// matmul for partial rounds
 template MixS(t, S, r) {
     signal input in[t];
     signal output out[t];
@@ -89,6 +92,7 @@ template PoseidonEx(nInputs, nOuts) {
     component mixLast[nOuts];
 
 
+    // initial round constants
 // initial round constants
     ark[0] = Ark(t, C, 0);
     for (var j=0; j<t; j++) {
@@ -99,6 +103,7 @@ template PoseidonEx(nInputs, nOuts) {
         }
     }
 
+    // initial full rounds
     for (var r = 0; r < nRoundsF\2-1; r++) {
         for (var j=0; j<t; j++) {
             sigmaF[r][j] = Sigma();
@@ -121,6 +126,7 @@ template PoseidonEx(nInputs, nOuts) {
 
     }
 
+    // finishing last full round of the first batch of full rounds
     for (var j=0; j<t; j++) {
         sigmaF[nRoundsF\2-1][j] = Sigma();
         sigmaF[nRoundsF\2-1][j].in <== mix[nRoundsF\2-2].out[j];
@@ -136,7 +142,7 @@ template PoseidonEx(nInputs, nOuts) {
         mix[nRoundsF\2-1].in[j] <== ark[nRoundsF\2].out[j];
     }
 
-
+    // partial rounds
     for (var r = 0; r < nRoundsP; r++) {
         sigmaP[r] = Sigma();
         if (r==0) {
@@ -159,6 +165,7 @@ template PoseidonEx(nInputs, nOuts) {
         }
     }
 
+    // second batch of full rounds
     for (var r = 0; r < nRoundsF\2-1; r++) {
         for (var j=0; j<t; j++) {
             sigmaF[nRoundsF\2 + r][j] = Sigma();
@@ -181,6 +188,7 @@ template PoseidonEx(nInputs, nOuts) {
 
     }
 
+    // finishing last round of second batch of full rounds
     for (var j=0; j<t; j++) {
         sigmaF[nRoundsF-1][j] = Sigma();
         sigmaF[nRoundsF-1][j].in <== mix[nRoundsF-2].out[j];
